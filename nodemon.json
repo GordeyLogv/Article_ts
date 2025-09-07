@@ -1,0 +1,10 @@
+{
+    "watch": [
+        "src"
+    ],
+    "ext": "ts,json,d.ts",
+    "ignore": [
+        "src/**/*.cpec.ts"
+    ],
+    "exec": "tsc && node ./dist/main.js"
+}
