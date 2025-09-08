@@ -16,22 +16,23 @@ export class ExceptionFilter implements IExceptionFilter {
         if (err instanceof HttpError) {
             this.loggerService.error(`Ошибка ${err.statusCode} - ${err.message} - ${err.contex}`);
             res.status(err.statusCode);
-            res.send({
+            res.json({
                 status: 'error',
                 message: err.message,
                 context: err.contex,
+                errors: err.details,
             });
         } else if (err instanceof Error) {
             this.loggerService.error(`[ExceptionFilter] - ${err.message}`);
             res.status(500);
-            res.send({
+            res.json({
                 status: 'error',
                 message: err.message,
             });
         } else {
             this.loggerService.error(`[ExceptionFilter] - неизвестная ошибка`);
             res.status(500);
-            res.send({
+            res.json({
                 status: 'error',
                 message: 'Internal Server Error',
             });

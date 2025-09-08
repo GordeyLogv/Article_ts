@@ -20,6 +20,11 @@ import { IJwtService } from './common/jwt/jwt.service.interface.js';
 import { JwtService } from './common/jwt/jwt.service.js';
 import { IAuthController } from './authorization/authorization.controller.interface.js';
 import { AuthController } from './authorization/authorization.controller.js';
+import { AuthMiddleware } from './middleware/middleware.auth.js';
+import { IAuthRoleMiddlewareFactory } from './middleware/middleware.auth.role.factory.interface.js';
+import { AuthRoleMiddlewareFactory } from './middleware/middleware.auth.role.factory.js';
+import { IValidationMiddlewareFactory } from './middleware/middleware.validation.factory.interface.js';
+import { ValidationMiddlewareFactore } from './middleware/middleware.validation.factory.js';
 
 const bootstrap = () => {
     const appContainer = new Container();
@@ -36,6 +41,16 @@ const bootstrap = () => {
     appContainer.bind<IAuthRepository>(TYPES.AuthorizationRepository).to(AuthRepository);
     appContainer.bind<IAuthService>(TYPES.AuhtorizationService).to(AuthService);
     appContainer.bind<IAuthController>(TYPES.AuthorizationController).to(AuthController);
+
+    appContainer.bind<AuthMiddleware>(TYPES.AuthMiddleware).to(AuthMiddleware).inSingletonScope();
+    appContainer
+        .bind<IAuthRoleMiddlewareFactory>(TYPES.AuthRoleMiddlewareFactory)
+        .to(AuthRoleMiddlewareFactory)
+        .inSingletonScope();
+    appContainer
+        .bind<IValidationMiddlewareFactory>(TYPES.ValidationMiddlewareFactory)
+        .to(ValidationMiddlewareFactore)
+        .inSingletonScope();
 
     const app = appContainer.get<App>(TYPES.Application);
 

@@ -11,6 +11,7 @@ import { Person } from './person.entity.js';
 import { IJwtPayload } from '../common/jwt/common/jwtPayload.interface.js';
 import { JwtPayloadDto } from '../common/jwt/dto/jwt.payload.dto.js';
 import { IJwtService } from '../common/jwt/jwt.service.interface.js';
+import { PersonRole } from './common/enums/roles.enum.js';
 
 @injectable()
 export class AuthService implements IAuthService {
@@ -54,7 +55,7 @@ export class AuthService implements IAuthService {
         const payload: IJwtPayload = {
             id: data.id,
             email: data.email,
-            role: data.personInfo.role,
+            role: data.personInfo.role as PersonRole,
             nickname: data.personInfo.nickname,
             age: data.personInfo.age,
             createdAt: data.personInfo.createdAt,

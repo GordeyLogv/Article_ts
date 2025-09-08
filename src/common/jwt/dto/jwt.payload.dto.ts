@@ -1,9 +1,10 @@
+import { PersonRole } from '../../../authorization/common/enums/roles.enum.js';
 import { IJwtPayload } from '../common/jwtPayload.interface.js';
 
 export class JwtPayloadDto {
     public readonly id: number;
     public readonly email: string;
-    public readonly role: string;
+    public readonly role: PersonRole;
     public readonly nickname: string;
     public readonly age: number;
     public readonly createdAt: Date;

@@ -10,7 +10,7 @@ import { AuthRegisterDto } from './dto/auth-register.dto.js';
 import { AuthLoginDto } from './dto/auth-login.dto.js';
 import { IAuthService } from './authorization.service.interface.js';
 import { IConfigService } from '../common/configService/config.service.interfsce.js';
-import { IJwtService } from '../common/jwt/jwt.service.interface.js';
+import { IValidationMiddlewareFactory } from '../middleware/middleware.validation.factory.interface.js';
 
 @injectable()
 export class AuthController extends BaseController implements IAuthController {
@@ -19,7 +19,7 @@ export class AuthController extends BaseController implements IAuthController {
         @inject(TYPES.ExceptionFilter) exceptionFilter: IExceptionFilter,
         @inject(TYPES.ConfigService) private configService: IConfigService,
         @inject(TYPES.AuhtorizationService) private authService: IAuthService,
-        @inject(TYPES.JwtService) private jwtService: IJwtService,
+        @inject(TYPES.ValidationMiddlewareFactory) private validateMiddleware: IValidationMiddlewareFactory,
     ) {
         super(loggerService, exceptionFilter);
 
@@ -28,13 +28,13 @@ export class AuthController extends BaseController implements IAuthController {
                 path: '/register',
                 method: 'post',
                 func: this.register.bind(this),
-                middleware: [],
+                middleware: [this.validateMiddleware.create(AuthRegisterDto)],
             },
             {
                 path: '/login',
                 method: 'post',
                 func: this.login.bind(this),
-                middleware: [],
+                middleware: [this.validateMiddleware.create(AuthLoginDto)],
             },
         ]);
     }

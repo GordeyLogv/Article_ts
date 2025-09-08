@@ -11,4 +11,8 @@ export const TYPES = {
     AuthorizationRepository: Symbol.for('AuthorizationRepository'),
     AuhtorizationService: Symbol.for('AuthorizationService'),
     AuthorizationController: Symbol.for('AuthorizationController'),
+
+    AuthMiddleware: Symbol.for('AuthMiddleware'),
+    AuthRoleMiddlewareFactory: Symbol.for('AuthRoleMiddlewareFactory'),
+    ValidationMiddlewareFactory: Symbol.for('ValidationMiddlewareFactory'),
 };
