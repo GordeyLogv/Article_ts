@@ -25,6 +25,10 @@ import { IAuthRoleMiddlewareFactory } from './middleware/middleware.auth.role.fa
 import { AuthRoleMiddlewareFactory } from './middleware/middleware.auth.role.factory.js';
 import { IValidationMiddlewareFactory } from './middleware/middleware.validation.factory.interface.js';
 import { ValidationMiddlewareFactore } from './middleware/middleware.validation.factory.js';
+import { IProfileRepository } from './profile/profile.repository.interface.js';
+import { ProfileRepository } from './profile/profile.repository.js';
+import { IProfileService } from './profile/profile.service.interface.js';
+import { ProfileService } from './profile/profile.service.js';
 
 const bootstrap = () => {
     const appContainer = new Container();
@@ -41,6 +45,9 @@ const bootstrap = () => {
     appContainer.bind<IAuthRepository>(TYPES.AuthorizationRepository).to(AuthRepository);
     appContainer.bind<IAuthService>(TYPES.AuhtorizationService).to(AuthService);
     appContainer.bind<IAuthController>(TYPES.AuthorizationController).to(AuthController);
+
+    appContainer.bind<IProfileRepository>(TYPES.ProfileRepository).to(ProfileRepository);
+    appContainer.bind<IProfileService>(TYPES.ProfileService).to(ProfileService);
 
     appContainer.bind<AuthMiddleware>(TYPES.AuthMiddleware).to(AuthMiddleware).inSingletonScope();
     appContainer
