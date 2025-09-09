@@ -1,17 +1,10 @@
-import { PersonRole } from '../authorization/common/enums/roles.enum.js';
+import { JwtPayloadDto } from '../common/jwt/dto/jwt.payload.dto.js';
 
 declare global {
     namespace Express {
         export interface Request {
-            token?: string;
-            user?: {
-                id: number;
-                email: string;
-                role: PersonRole;
-                nickname: string;
-                age: number;
-                createdAt: Date;
-            };
+            token: string;
+            user: JwtPayloadDto;
         }
     }
 }

@@ -1,5 +1,4 @@
 import { inject, injectable } from 'inversify';
-import { PersonInfoModel, PersonModel } from '@prisma/client';
 
 import { IProfileService } from './profile.service.interface.js';
 import { TYPES } from '../types.js';
@@ -9,8 +8,6 @@ import { JwtPayloadDto } from '../common/jwt/dto/jwt.payload.dto.js';
 import { ProfileUpdateDto } from './dto/profile.update.dto.js';
 import { Person } from '../authorization/person.entity.js';
 import { IProfileRepository } from './profile.repository.interface.js';
-import { IJwtPayload } from '../common/jwt/common/jwtPayload.interface.js';
-import { PersonRole } from '../authorization/common/enums/roles.enum.js';
 
 @injectable()
 export class ProfileService implements IProfileService {
@@ -37,28 +34,27 @@ export class ProfileService implements IProfileService {
 
         const updatePerson = await this.profileRepository.update(user.id, newDataProfile);
 
-        const createNewPayload = this.createPayload(updatePerson);
-        const createNewPayloadDto = new JwtPayloadDto(createNewPayload, this.configService.expiresInSecond);
+        const payload = this.jwtService.createJwtDto(updatePerson, this.configService.expiresInSecond);
 
         const newToken = this.jwtService.signToken(
-            createNewPayloadDto,
+            payload,
             this.configService.access_token_secret,
             this.configService.expiresInSecond,
         );
 
+        await this.jwtService.addTokenToBlackList(token);
+
         return newToken;
     }
 
-    private createPayload(data: PersonModel & { personInfo: PersonInfoModel }): IJwtPayload {
-        const payload: IJwtPayload = {
-            id: data.id,
-            email: data.email,
-            role: data.personInfo.role as PersonRole,
-            nickname: data.personInfo.nickname,
-            age: data.personInfo.age,
-            createdAt: data.personInfo.createdAt,
-        };
+    public async deleteProfile(id: number, token: string): Promise<boolean> {
+        const isDeleted = await this.profileRepository.delete(id);
+        const isBlockedToken = await this.jwtService.addTokenToBlackList(token);
 
-        return payload;
+        return isDeleted && isBlockedToken ? true : false;
+    }
+
+    public async logout(token: string): Promise<boolean> {
+        return await this.jwtService.addTokenToBlackList(token);
     }
 }
