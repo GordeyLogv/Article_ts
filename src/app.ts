@@ -7,6 +7,8 @@ import { ILoggerService } from './common/loggerService/logger.service.interface.
 import { IConfigService } from './common/configService/config.service.interfsce.js';
 import { IExceptionFilter } from './common/errors/exception.filter.interface.js';
 import { AuthController } from './authorization/authorization.controller.js';
+import { ProfileController } from './profile/profile.controller.js';
+import { PersonsController } from './persons/persons.controller.js';
 
 @injectable()
 export class App {
@@ -20,6 +22,8 @@ export class App {
         @inject(TYPES.ConfigService) private configService: IConfigService,
         @inject(TYPES.ExceptionFilter) private exceptionFilter: IExceptionFilter,
         @inject(TYPES.AuthorizationController) private authController: AuthController,
+        @inject(TYPES.ProfileController) private profileController: ProfileController,
+        @inject(TYPES.PersonsController) private personsController: PersonsController,
     ) {
         this.app = express();
         this.PORT = this.configService.port;
@@ -36,6 +40,8 @@ export class App {
 
     public useRoutes() {
         this.app.use('/api', this.authController.router);
+        this.app.use('/api', this.profileController.router);
+        this.app.use('/api', this.personsController.router);
     }
 
     public useExceptionFilter() {

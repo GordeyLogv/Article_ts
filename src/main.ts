@@ -29,6 +29,14 @@ import { IProfileRepository } from './profile/profile.repository.interface.js';
 import { ProfileRepository } from './profile/profile.repository.js';
 import { IProfileService } from './profile/profile.service.interface.js';
 import { ProfileService } from './profile/profile.service.js';
+import { IProfileController } from './profile/profile.controller.interface.js';
+import { ProfileController } from './profile/profile.controller.js';
+import { IPersonsRepository } from './persons/persons.repository.interface.js';
+import { PersonsRepository } from './persons/persons.repository.js';
+import { IPersonsService } from './persons/persons.service.interface.js';
+import { PersonsService } from './persons/persons.service.js';
+import { IPersonsController } from './persons/persons.controller.interface.js';
+import { PersonsController } from './persons/persons.controller.js';
 
 const bootstrap = () => {
     const appContainer = new Container();
@@ -48,6 +56,11 @@ const bootstrap = () => {
 
     appContainer.bind<IProfileRepository>(TYPES.ProfileRepository).to(ProfileRepository);
     appContainer.bind<IProfileService>(TYPES.ProfileService).to(ProfileService);
+    appContainer.bind<IProfileController>(TYPES.ProfileController).to(ProfileController);
+
+    appContainer.bind<IPersonsRepository>(TYPES.PersonsRepository).to(PersonsRepository);
+    appContainer.bind<IPersonsService>(TYPES.PersonsService).to(PersonsService);
+    appContainer.bind<IPersonsController>(TYPES.PersonsController).to(PersonsController);
 
     appContainer.bind<AuthMiddleware>(TYPES.AuthMiddleware).to(AuthMiddleware).inSingletonScope();
     appContainer
