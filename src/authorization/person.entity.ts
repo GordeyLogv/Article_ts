@@ -1,7 +1,7 @@
 import { compare, hash } from 'bcryptjs';
 
 import { PersonRole } from './common/enums/roles.enum.js';
-import { PersonPersistence } from '../common/databaseService/entities/person.persistence.js';
+import { IPersonPersistence } from '../common/databaseService/entities/person.persistence.js';
 import { IPerson } from './person.entity.interface.js';
 
 export class Person implements IPerson {
@@ -33,7 +33,7 @@ export class Person implements IPerson {
         return await compare(password, this._password);
     }
 
-    public toPersistence(): PersonPersistence {
+    public toPersistence(): IPersonPersistence {
         return {
             email: this._email,
             password: this._password,

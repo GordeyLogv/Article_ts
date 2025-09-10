@@ -37,6 +37,12 @@ import { IPersonsService } from './persons/persons.service.interface.js';
 import { PersonsService } from './persons/persons.service.js';
 import { IPersonsController } from './persons/persons.controller.interface.js';
 import { PersonsController } from './persons/persons.controller.js';
+import { IArticleRepository } from './article/article.repositoty.interface.js';
+import { ArticleRepository } from './article/article.repository.js';
+import { IArticleService } from './article/article.service.interface.js';
+import { ArticleService } from './article/article.service.js';
+import { IArticleController } from './article/article.controller.interface.js';
+import { ArticleController } from './article/article.controller.js';
 
 const bootstrap = () => {
     const appContainer = new Container();
@@ -61,6 +67,10 @@ const bootstrap = () => {
     appContainer.bind<IPersonsRepository>(TYPES.PersonsRepository).to(PersonsRepository);
     appContainer.bind<IPersonsService>(TYPES.PersonsService).to(PersonsService);
     appContainer.bind<IPersonsController>(TYPES.PersonsController).to(PersonsController);
+
+    appContainer.bind<IArticleRepository>(TYPES.ArticleRepository).to(ArticleRepository);
+    appContainer.bind<IArticleService>(TYPES.ArticleService).to(ArticleService);
+    appContainer.bind<IArticleController>(TYPES.ArticleController).to(ArticleController);
 
     appContainer.bind<AuthMiddleware>(TYPES.AuthMiddleware).to(AuthMiddleware).inSingletonScope();
     appContainer

@@ -9,6 +9,7 @@ import { IExceptionFilter } from './common/errors/exception.filter.interface.js'
 import { AuthController } from './authorization/authorization.controller.js';
 import { ProfileController } from './profile/profile.controller.js';
 import { PersonsController } from './persons/persons.controller.js';
+import { ArticleController } from './article/article.controller.js';
 
 @injectable()
 export class App {
@@ -24,6 +25,7 @@ export class App {
         @inject(TYPES.AuthorizationController) private authController: AuthController,
         @inject(TYPES.ProfileController) private profileController: ProfileController,
         @inject(TYPES.PersonsController) private personsController: PersonsController,
+        @inject(TYPES.ArticleController) private articleController: ArticleController,
     ) {
         this.app = express();
         this.PORT = this.configService.port;
@@ -42,6 +44,7 @@ export class App {
         this.app.use('/api', this.authController.router);
         this.app.use('/api', this.profileController.router);
         this.app.use('/api', this.personsController.router);
+        this.app.use('/api', this.articleController.router);
     }
 
     public useExceptionFilter() {

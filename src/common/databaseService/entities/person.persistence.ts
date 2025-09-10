@@ -1,4 +1,4 @@
-export interface PersonPersistence {
+export interface IPersonPersistence {
     email: string;
     password: string;
     role: string;
