@@ -22,7 +22,7 @@ export class ConfigService implements IConfigService {
         this.config = result.parsed ?? {};
     }
 
-    private get(key: string): string {
+    public get(key: string): string {
         const value = this.config[key];
 
         if (!value) {
