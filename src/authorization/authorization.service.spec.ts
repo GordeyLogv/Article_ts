@@ -1,5 +1,6 @@
 import { Container } from 'inversify';
 import { PersonInfoModel, PersonModel } from '@prisma/client';
+import { JwtPayload } from 'jsonwebtoken';
 
 import { IAuthService } from './authorization.service.interface.js';
 import { IAuthRepository } from './authorization.repository.interface.js';
@@ -10,6 +11,8 @@ import { AuthService } from './authorization.service.js';
 import { PersonRole } from './common/enums/roles.enum.js';
 import { AuthRegisterDto } from './dto/auth-register.dto.js';
 import { Person } from './person.entity.js';
+import { AuthLoginDto } from './dto/auth-login.dto.js';
+import { JwtPayloadDto } from '../common/jwt/dto/jwt.payload.dto.js';
 
 let authorizationService: IAuthService;
 let authorizationRepository: IAuthRepository;
@@ -55,174 +58,192 @@ describe('AuthorizationService', () => {
         const personMock: PersonModel & { personInfo: PersonInfoModel } = {
             id: 1,
             email: 'email@gmail.com',
-            password: 'password',
+            password: 'hashPassword',
             personInfoId: 1,
             personInfo: {
                 id: 1,
-                nickname: 'nickname',
-                age: 20,
+                nickname: 'Person',
                 role: PersonRole.USER,
+                age: 20,
                 createdAt: new Date(),
             },
         };
 
-        it('return personModel if existed email', async () => {
+        it('return personModel when email is exsited', async () => {
             const existedEmail = personMock.email;
 
             (authorizationRepository.findByEmail as jest.Mock).mockResolvedValueOnce(personMock);
 
-            const existedPerson = await authorizationService.findPersonByEmail(existedEmail);
+            const result = await authorizationService.findPersonByEmail(existedEmail);
 
             expect(authorizationRepository.findByEmail).toHaveBeenCalled();
             expect(authorizationRepository.findByEmail).toHaveBeenCalledWith(existedEmail);
-            expect(existedPerson).toEqual(personMock);
+            expect(result).toEqual(personMock);
         });
 
-        it('return null if not existed email', async () => {
+        it('return null when email is not existed', async () => {
             const notExistedEmail = 'notexistedemail@gmail.com';
 
             (authorizationRepository.findByEmail as jest.Mock).mockResolvedValueOnce(null);
 
-            const notExistedPerson = await authorizationService.findPersonByEmail(notExistedEmail);
+            const result = await authorizationService.findPersonByEmail(notExistedEmail);
 
             expect(authorizationRepository.findByEmail).toHaveBeenCalled();
             expect(authorizationRepository.findByEmail).toHaveBeenCalledWith(notExistedEmail);
-            expect(notExistedPerson).toBeNull();
+            expect(result).toBeNull();
         });
     });
 
     describe('registerPerson', () => {
-        const registerDtoMock: AuthRegisterDto = {
-            email: 'email',
+        const dtoMock: AuthRegisterDto = {
+            email: 'email@gmail.com',
             password: 'password',
             nickname: 'nickname',
             age: 20,
         };
 
-        it('return personModel', async () => {
-            (authorizationRepository.create as jest.Mock).mockImplementationOnce(
-                (person: Person): PersonModel & { personInfo: PersonInfoModel } => {
-                    const infoPerson = person.toPersistence();
-                    return {
-                        id: 1,
-                        email: infoPerson.email,
-                        password: infoPerson.password,
-                        personInfoId: 1,
-                        personInfo: {
-                            id: 1,
-                            nickname: infoPerson.nickname,
-                            age: infoPerson.age,
-                            role: infoPerson.role,
-                            createdAt: infoPerson.createdAt,
-                        },
-                    };
-                },
-            );
+        it('return new personModel', async () => {
+            const personMock = new Person(dtoMock.email, dtoMock.nickname, dtoMock.age);
+            await personMock.setPassword(dtoMock.password, configService.salt);
 
-            const createdPerson = await authorizationService.registerPerson(registerDtoMock);
+            (authorizationRepository.create as jest.Mock).mockImplementationOnce(() => {
+                const personInfo = personMock.toPersistence();
+
+                return {
+                    id: 1,
+                    email: personInfo.email,
+                    password: personInfo.password,
+                    personInfoId: 1,
+                    personInfo: {
+                        id: 1,
+                        nickname: personInfo.nickname,
+                        role: personInfo.role,
+                        age: personInfo.age,
+                        createdAt: personInfo.createdAt,
+                    },
+                };
+            });
+
+            const result = await authorizationService.registerPerson(dtoMock);
 
             expect(authorizationRepository.create).toHaveBeenCalled();
             expect(authorizationRepository.create).toHaveBeenCalledWith(expect.any(Person));
-            expect(createdPerson.id).toEqual(1);
-            expect(createdPerson.password).not.toEqual(registerDtoMock.password);
+            expect(result.password).not.toEqual(dtoMock.password);
         });
     });
 
     describe('loginPerson', () => {
-        const loginDtoMock = {
+        const dtoMock: AuthLoginDto = {
             email: 'email@gmail.com',
-            password: 'hash-password',
+            password: 'password',
         };
 
-        it('return personModel if email and password is correct', async () => {
-            (authorizationRepository.findByEmail as jest.Mock).mockImplementationOnce(
-                async (email: string): Promise<PersonModel & { personInfo: PersonInfoModel }> => {
-                    const newPerson = new Person(email, 'newPerson', 20);
-                    await newPerson.setPassword(loginDtoMock.password, configService.salt);
-
-                    const infoPerson = newPerson.toPersistence();
-
-                    return {
-                        id: 1,
-                        email: infoPerson.email,
-                        password: infoPerson.password,
-                        personInfoId: 1,
-                        personInfo: {
-                            id: 1,
-                            nickname: infoPerson.nickname,
-                            age: infoPerson.age,
-                            role: infoPerson.role,
-                            createdAt: infoPerson.createdAt,
-                        },
-                    };
-                },
-            );
-
-            jest.spyOn(Person.prototype, 'comparePassword').mockResolvedValueOnce(true);
-
-            const isPerson = await authorizationService.loginPerson(loginDtoMock);
-
-            expect(authorizationRepository.findByEmail).toHaveBeenCalled();
-            expect(authorizationRepository.findByEmail).toHaveBeenCalledWith(loginDtoMock.email);
-            expect(isPerson).toEqual(expect.objectContaining({ email: loginDtoMock.email }));
-        });
-
-        it('return false when password is incorrect', async () => {
-            jest.spyOn(Person.prototype, 'comparePassword').mockResolvedValueOnce(false);
-
-            const isPerson = await authorizationService.loginPerson(loginDtoMock);
-
-            expect(authorizationRepository.findByEmail).toHaveBeenCalled();
-            expect(authorizationRepository.findByEmail).toHaveBeenCalledWith(loginDtoMock.email);
-            expect(isPerson).toBeFalsy();
-        });
-
-        it('return false when email is undefined', async () => {
-            (authorizationRepository.findByEmail as jest.Mock).mockResolvedValueOnce(null);
-
-            const isPerson = await authorizationService.loginPerson(loginDtoMock);
-
-            expect(authorizationRepository.findByEmail).toHaveBeenCalled();
-            expect(authorizationRepository.findByEmail).toHaveBeenCalledWith(loginDtoMock.email);
-            expect(isPerson).toBeFalsy();
-        });
-    });
-
-    describe('createToken', () => {
-        const mockPerson: PersonModel & { personInfo: PersonInfoModel } = {
+        const personMock: PersonModel & { personInfo: PersonInfoModel } = {
             id: 1,
-            email: 'email@gmail.com',
-            password: 'hashedPassword',
+            email: dtoMock.email,
+            password: 'hashPassword',
             personInfoId: 1,
             personInfo: {
                 id: 1,
                 nickname: 'nickname',
-                age: 20,
                 role: PersonRole.USER,
+                age: 20,
                 createdAt: new Date(),
             },
         };
 
-        it('return access token', () => {
-            (jwtService.createJwtDto as jest.Mock).mockReturnValue({ email: mockPerson.email });
-            (jwtService.signToken as jest.Mock).mockReturnValue('token');
+        it('return personModel when email and password is correct', async () => {
+            (authorizationRepository.findByEmail as jest.Mock).mockResolvedValueOnce(personMock);
+            const spy = jest.spyOn(Person.prototype, 'comparePassword').mockResolvedValue(true);
 
-            const token = authorizationService.createToken(
-                mockPerson,
+            const result = await authorizationService.loginPerson(dtoMock);
+
+            expect(authorizationRepository.findByEmail).toHaveBeenCalled();
+            expect(authorizationRepository.findByEmail).toHaveBeenCalledWith(dtoMock.email);
+            expect(spy).toHaveBeenCalled();
+            expect(result).toEqual(personMock);
+        });
+
+        it('return false when email incorrect', async () => {
+            const notExistedEmailToPerson: AuthLoginDto = {
+                email: 'notExisted@gmail.com',
+                password: 'existed',
+            };
+
+            (authorizationRepository.findByEmail as jest.Mock).mockResolvedValueOnce(null);
+
+            const result = await authorizationService.loginPerson(notExistedEmailToPerson);
+
+            expect(authorizationRepository.findByEmail).toHaveBeenCalled();
+            expect(authorizationRepository.findByEmail).toHaveBeenCalledWith(notExistedEmailToPerson.email);
+            expect(result).toBe(false);
+        });
+
+        it('return false when password incorrect', async () => {
+            const notExistedPasswordToPerson: AuthLoginDto = {
+                email: personMock.email,
+                password: 'notExisted',
+            };
+
+            (authorizationRepository.findByEmail as jest.Mock).mockResolvedValueOnce(personMock);
+            const spy = jest.spyOn(Person.prototype, 'comparePassword').mockResolvedValueOnce(false);
+
+            const result = await authorizationService.loginPerson(notExistedPasswordToPerson);
+
+            expect(authorizationRepository.findByEmail).toHaveBeenCalled();
+            expect(authorizationRepository.findByEmail).toHaveBeenCalledWith(notExistedPasswordToPerson.email);
+            expect(spy).toHaveBeenCalled();
+            expect(result).toBe(false);
+        });
+    });
+
+    describe('createToken', () => {
+        const jwtDtoMock = {
+            id: 1,
+            email: 'email@gmail.com',
+            role: PersonRole.USER,
+            nickname: 'nickname',
+            age: 20,
+            createdAt: new Date(),
+            iat: 2000,
+            exp: 20000,
+        } as JwtPayloadDto;
+
+        const tokenMock = 'accessToken';
+
+        const personMock: PersonModel & { personInfo: PersonInfoModel } = {
+            id: 1,
+            email: 'email@gmail.com',
+            password: '12345',
+            personInfoId: 1,
+            personInfo: {
+                id: 1,
+                nickname: 'nickname',
+                role: PersonRole.USER,
+                age: 20,
+                createdAt: new Date(),
+            },
+        };
+
+        it('return token', () => {
+            (jwtService.createJwtDto as jest.Mock).mockReturnValueOnce(jwtDtoMock);
+            (jwtService.signToken as jest.Mock).mockReturnValueOnce(tokenMock);
+
+            const result = authorizationService.createToken(
+                personMock,
                 configService.access_token_secret,
                 configService.expiresInSecond,
             );
 
-            expect(jwtService.createJwtDto).toHaveBeenCalledTimes(1);
-            expect(jwtService.createJwtDto).toHaveBeenCalledWith(mockPerson, configService.expiresInSecond);
-
-            expect(jwtService.signToken).toHaveBeenCalledTimes(1);
+            expect(jwtService.createJwtDto).toHaveBeenCalled();
+            expect(jwtService.createJwtDto).toHaveBeenCalledWith(personMock, configService.expiresInSecond);
+            expect(jwtService.signToken).toHaveBeenCalled();
             expect(jwtService.signToken).toHaveBeenCalledWith(
-                { email: mockPerson.email },
+                jwtDtoMock,
                 configService.access_token_secret,
                 configService.expiresInSecond,
             );
-            expect(token).toEqual('token');
+            expect(result).toEqual(tokenMock);
         });
     });
 });
